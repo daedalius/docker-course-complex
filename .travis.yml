@@ -1,0 +1,21 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t daedalius/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true daedalius/react-test npm test
+
+after_success:
+  - docker build -t daedalius/multi-client ./client
+  - docker build -t daedalius/multi-nginx ./nginx
+  - docker build -t daedalius/multi-server ./server
+  - docker build -t daedalius/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push daedalius/multi-client
+  - docker push daedalius/multi-nginx
+  - docker push daedalius/multi-server
+  - docker push daedalius/multi-worker
